@@ -30,37 +30,37 @@ impl From<HandType> for MyHandType {
 #[derive(Copy, Clone, Default)]
 pub struct MyHand {
     /// Identifies the chirality of this hand.
-    type_: MyHandType,
+    pub type_: MyHandType,
 
     /// How confident we are with a given hand pose. Not currently used (always 1.0).
-    confidence: f32,
+    pub confidence: f32,
 
     /// The total amount of time this hand has been tracked, in microseconds.
-    visible_time: u64,
+    pub visible_time: u64,
 
     /// The distance between index finger and thumb.
-    pinch_distance: f32,
+    pub pinch_distance: f32,
 
     /// The average angle of fingers to palm.
-    grab_angle: f32,
+    pub grab_angle: f32,
 
     /// The normalized estimate of the pinch pose.
     /// Zero is not pinching; one is fully pinched.
-    pinch_strength: f32,
+    pub pinch_strength: f32,
 
     /// The normalized estimate of the grab hand pose.
     /// Zero is not grabbing; one is fully grabbing.
-    grab_strength: f32,
+    pub grab_strength: f32,
 
     /// Additional information associated with the palm. @since 3.0.0
-    palm: Palm,
+    pub palm: Palm,
 
     /// Fingers representations
-    digits: [MyDigit; 5usize],
+    pub digits: [MyDigit; 5usize],
 
     /// The arm to which this hand is attached.
     /// An arm consists of a single LEAP_BONE struct.
-    arm: MyBone,
+    pub arm: MyBone,
 }
 
 impl From<Hand<'_>> for MyHand {

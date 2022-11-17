@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use bevy::prelude::*;
 use leaprs::{Connection, ConnectionConfig, Event};
 
@@ -66,15 +67,14 @@ fn update_hand_data(
     }
 }
 
-// #[derive(Resource, Default, Clone, Debug)]
-// struct MyConnection {
-//     connection: Arc<Mutex<Connection>>,
-// }
-//
-// unsafe impl Send for MyConnection {}
+fn print_hand_position(hands_data: Res<HandsData>) {
+    if hands_data.hands.len() == 0 {
+        return;
+    }
 
-fn print_hand_position() {
-    // println!("test")
+    let x: MyHand = hands_data.hands[0];
+
+    println!("hands data - confidence: {}", x.digits[1].proximal.rotation)
 }
 
 fn spawn_basic_scene(
