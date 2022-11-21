@@ -1,7 +1,8 @@
 use leaprs::Bone;
 use bevy::math::{Vec3, Vec4};
+use bevy::prelude::Quat;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct MyBone {
     /// The base of the bone, closer to the heart. The bones origin
     pub prev_joint: Vec3,
@@ -14,7 +15,7 @@ pub struct MyBone {
 
     /// Rotation in world space from the forward direction.
     /// Convert the quaternion to a matrix to derive the basis vectors.
-    pub rotation: Vec4,
+    pub rotation: Quat,
 }
 
 impl From<Bone<'_>> for MyBone {
@@ -23,7 +24,7 @@ impl From<Bone<'_>> for MyBone {
             prev_joint: Vec3::from_array(bone.prev_joint().array()),
             next_joint: Vec3::from_array(bone.next_joint().array()),
             width: bone.width(),
-            rotation: Vec4::from_array(bone.rotation().array()),
+            rotation: Quat::from_array(bone.rotation().array()),
         }
     }
 }
