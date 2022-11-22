@@ -2,7 +2,7 @@ use leaprs::Digit;
 
 use crate::hand_models::bone::MyBone;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct MyDigit {
     /// The finger bone wholly inside the hand.
     /// For thumbs, this bone is set to have zero length and width, an identity basis matrix,

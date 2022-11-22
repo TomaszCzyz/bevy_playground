@@ -1,7 +1,7 @@
 use bevy::math::{Vec3, Vec4};
 use bevy::utils::default;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Palm {
     /// The center position of the palm in millimeters from the Ultraleap Tracking camera device origin.
     pub position: Vec3,

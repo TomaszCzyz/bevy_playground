@@ -27,7 +27,7 @@ impl From<HandType> for MyHandType {
     }
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct MyHand {
     /// Identifies the chirality of this hand.
     pub type_: MyHandType,
