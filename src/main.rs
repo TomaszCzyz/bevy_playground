@@ -5,10 +5,10 @@ use bevy::asset::Asset;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::ecs::query::QueryIter;
 use bevy::math::vec3;
-use bevy::prelude::*;
 use bevy::prelude::shape::Capsule;
-use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
+use bevy::prelude::*;
 use bevy::render::render_resource::ShaderRef::Handle;
+use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use leaprs::{Connection, ConnectionConfig, Event};
 
 use crate::hand_models::bone::MyBone;
@@ -20,7 +20,6 @@ mod hand_models;
 pub const HEIGHT: f32 = 720.0;
 pub const WIDTH: f32 = 1280.0;
 const X_EXTENT: f32 = 80.;
-
 
 fn main() {
     App::new()
@@ -58,10 +57,7 @@ struct HandsData {
 #[derive(Component)]
 struct HandPart;
 
-fn update_hand_data(
-    mut hands_res: ResMut<HandsData>,
-    mut leap_conn: NonSendMut<Connection>,
-) {
+fn update_hand_data(mut hands_res: ResMut<HandsData>, mut leap_conn: NonSendMut<Connection>) {
     if let Ok(message) = leap_conn.poll(25) {
         match &message.event() {
             Event::Connection(_) => println!("connection event"),
@@ -131,12 +127,13 @@ fn display_hands(
     hands_res: Res<HandsData>,
     mut bone_meshes_query: Query<(&mut Visibility, &mut Transform), With<HandPart>>,
 ) {
-    let all_hands_bones = hands_res.hands
+    let all_hands_bones = hands_res
+        .hands
         .iter()
         .enumerate()
-        .flat_map(|x2| { x2.1.digits })
-        .map(|x| { [x.metacarpal, x.proximal, x.intermediate, x.distal] })
-        .flat_map(|x1| { x1 });
+        .flat_map(|x2| x2.1.digits)
+        .map(|x| [x.metacarpal, x.proximal, x.intermediate, x.distal])
+        .flat_map(|x1| x1);
 
     let mut bones_iterator = all_hands_bones.into_iter();
     let mut query_iterator = bone_meshes_query.iter_mut();
@@ -156,7 +153,10 @@ fn display_hands(
     }
 }
 
-fn hide_rest_meshes(query_iterator: &mut QueryIter<(&mut Visibility, &mut Transform), With<HandPart>>, visibility: &mut Visibility) {
+fn hide_rest_meshes(
+    query_iterator: &mut QueryIter<(&mut Visibility, &mut Transform), With<HandPart>>,
+    visibility: &mut Visibility,
+) {
     visibility.is_visible = false;
 
     while let Some((mut visibility, _)) = query_iterator.next() {
@@ -206,8 +206,8 @@ fn uv_debug_texture() -> Image {
     const TEXTURE_SIZE: usize = 8;
 
     let mut palette: [u8; 32] = [
-        255, 102, 159, 255, 255, 159, 102, 255, 236, 255, 102, 255, 121, 255, 102, 255, 102, 255,
-        198, 255, 102, 198, 255, 255, 121, 102, 255, 255, 236, 102, 255, 255,
+        255, 102, 159, 255, 255, 159, 102, 255, 236, 255, 102, 255, 121, 255, 102, 255, 102, 255, 198, 255, 102, 198,
+        255, 255, 121, 102, 255, 255, 236, 102, 255, 255,
     ];
 
     let mut texture_data = [0; TEXTURE_SIZE * TEXTURE_SIZE * 4];

@@ -24,27 +24,12 @@ pub struct Palm {
     /// The estimated width of the palm when the hand is in a flat position.
     pub width: f32,
 
-    // /// The unit direction vector pointing from the palm position toward the fingers.
-    // pub direction: Vec3,
-
+    /// The unit direction vector pointing from the palm position toward the fingers.
+    /// pub direction: Vec3,
     /// The quaternion representing the palm's orientation
     /// corresponding to the basis {normal x direction, -normal, -direction}
     pub orientation: Vec4,
 }
-
-// impl Default for Palm {
-//     fn default() -> Self {
-//         Palm {
-//             ..default()
-//             // position: default(),
-//             // stabilized_position: default(),
-//             // velocity: default(),
-//             // normal: default(),
-//             // width: 0.0,
-//             // orientation: default(),
-//         }
-//     }
-// }
 
 impl From<leaprs::Palm<'_>> for Palm {
     fn from(leaprs_palm: leaprs::Palm) -> Self {

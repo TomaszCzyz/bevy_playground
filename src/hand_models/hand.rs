@@ -66,14 +66,13 @@ pub struct MyHand {
 impl From<Hand<'_>> for MyHand {
     fn from(hand: Hand) -> Self {
         let digits = hand.digits();
-        let my_digits: [MyDigit; 5] =
-            [
-                MyDigit::from(&digits[0]),
-                MyDigit::from(&digits[1]),
-                MyDigit::from(&digits[2]),
-                MyDigit::from(&digits[3]),
-                MyDigit::from(&digits[4]),
-            ];
+        let my_digits: [MyDigit; 5] = [
+            MyDigit::from(&digits[0]),
+            MyDigit::from(&digits[1]),
+            MyDigit::from(&digits[2]),
+            MyDigit::from(&digits[3]),
+            MyDigit::from(&digits[4]),
+        ];
 
         MyHand {
             type_: MyHandType::from(hand.hand_type()),

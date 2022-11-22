@@ -1,6 +1,6 @@
-use leaprs::Bone;
 use bevy::math::{Vec3, Vec4};
 use bevy::prelude::Quat;
+use leaprs::Bone;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct MyBone {
