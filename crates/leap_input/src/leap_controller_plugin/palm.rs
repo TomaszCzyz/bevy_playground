@@ -1,8 +1,8 @@
 use bevy::math::{Vec3, Vec4};
-use bevy::utils::default;
+use leaprs::Palm;
 
 #[derive(Copy, Clone, Debug, Default)]
-pub struct Palm {
+pub struct MyPalm {
     /// The center position of the palm in millimeters from the Ultraleap Tracking camera device origin.
     pub position: Vec3,
 
@@ -31,9 +31,9 @@ pub struct Palm {
     pub orientation: Vec4,
 }
 
-impl From<leaprs::Palm<'_>> for Palm {
-    fn from(leaprs_palm: leaprs::Palm) -> Self {
-        Palm {
+impl From<Palm<'_>> for MyPalm {
+    fn from(leaprs_palm: Palm) -> Self {
+        MyPalm {
             position: Vec3::from_array(leaprs_palm.position().array()),
             stabilized_position: Vec3::from_array(leaprs_palm.stabilized_position().array()),
             velocity: Vec3::from_array(leaprs_palm.velocity().array()),

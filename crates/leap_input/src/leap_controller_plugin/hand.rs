@@ -1,10 +1,7 @@
-use std::ops::Deref;
-
-use leaprs::{Digit, Hand, HandType};
-
-use crate::hand_models::bone::MyBone;
-use crate::hand_models::digit::MyDigit;
-use crate::hand_models::palm::Palm;
+use leaprs::{Hand, HandType};
+use crate::leap_controller_plugin::bone::MyBone;
+use crate::leap_controller_plugin::digit::MyDigit;
+use crate::leap_controller_plugin::palm::MyPalm;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MyHandType {
@@ -53,7 +50,7 @@ pub struct MyHand {
     pub grab_strength: f32,
 
     /// Additional information associated with the palm. @since 3.0.0
-    pub palm: Palm,
+    pub palm: MyPalm,
 
     /// Fingers representations
     pub digits: [MyDigit; 5usize],
@@ -82,7 +79,7 @@ impl From<Hand<'_>> for MyHand {
             grab_angle: hand.grab_angle(),
             pinch_strength: hand.pinch_strength(),
             grab_strength: hand.grab_strength(),
-            palm: Palm::from(hand.palm()),
+            palm: MyPalm::from(hand.palm()),
             digits: my_digits,
             arm: MyBone::from(hand.arm()),
         }

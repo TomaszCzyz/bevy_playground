@@ -3,6 +3,11 @@ name = "bevy_playground"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = [
+    "crates/*"
+]
+
 [profile.dev]
 opt-level = 1
 
@@ -10,5 +15,5 @@ opt-level = 1
 opt-level = 3
 
 [dependencies]
+leap_input = { path = "crates/leap_input", version = "0.1.0" }
 bevy = "0.9"
-leaprs = "0.1"

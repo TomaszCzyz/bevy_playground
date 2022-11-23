@@ -1,6 +1,6 @@
 use leaprs::Digit;
 
-use crate::hand_models::bone::MyBone;
+use crate::leap_controller_plugin::bone::MyBone;
 
 #[derive(Copy, Clone, Debug, Default)]
 pub struct MyDigit {
@@ -21,7 +21,7 @@ pub struct MyDigit {
     /// The distal phalange terminating at the finger tip.
     pub distal: MyBone,
 
-    is_extended: bool,
+    pub is_extended: bool,
 }
 
 impl From<&Digit<'_>> for MyDigit {

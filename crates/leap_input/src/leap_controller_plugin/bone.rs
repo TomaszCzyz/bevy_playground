@@ -1,4 +1,4 @@
-use bevy::math::{Vec3, Vec4};
+use bevy::math::Vec3;
 use bevy::prelude::Quat;
 use leaprs::Bone;
 
