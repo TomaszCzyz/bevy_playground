@@ -1,7 +1,8 @@
 use bevy::app::{App, Plugin};
-use bevy::prelude::shape::{Capsule, Cube};
 use bevy::prelude::*;
+use bevy::prelude::shape::Capsule;
 use leaprs::{Connection, ConnectionConfig, Event};
+use crate::display::display_hands;
 
 use crate::leap_controller_plugin::hand::MyHand;
 
@@ -17,6 +18,7 @@ impl Plugin for LeapControllerPlugin {
         app.add_startup_system(create_connection)
             .add_startup_system(setup_for_hands)
             .add_system(update_hand_data)
+            .add_system(display_hands.after(update_hand_data))
             .insert_resource(HandsData { hands: default() });
     }
 }
@@ -26,9 +28,12 @@ pub struct HandsData {
     pub hands: Vec<MyHand>,
 }
 
+/// Struct to mark SpatialBundle, which is a parent of all [`HandPart`]s.
+/// You can use it for to change relative Transform of all digits at once.
 #[derive(Component)]
 pub struct HandsOrigin;
 
+/// Struct to mark all hands' digits
 #[derive(Component)]
 pub struct HandPart;
 
@@ -86,27 +91,8 @@ fn setup_for_hands(
         ..default()
     });
 
-    let debug_material_hands_origin = materials.add(StandardMaterial {
-        base_color: Color::rgb_u8(50, 191, 227),
-        metallic: 0.5,
-        perceptual_roughness: 0.8,
-        reflectance: 0.2,
-        ..default()
-    });
-
-    // SpatialBundle {
-    //     transform: Transform::from_xyz(-200.0, -500., -100.0).looking_at(Vec3::ZERO, Vec3::Y),
-    //     ..default()
-    // }
     commands
-        .spawn((
-            PbrBundle {
-                mesh: meshes.add(Cube { size: 40.0 }.into()),
-                material: debug_material_hands_origin.clone(),
-                ..default()
-            },
-            HandsOrigin,
-        ))
+        .spawn((SpatialBundle::default(), HandsOrigin))
         .with_children(|parent| {
             for shape in shapes.into_iter() {
                 parent.spawn((
