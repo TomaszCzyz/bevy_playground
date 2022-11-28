@@ -10,8 +10,7 @@ pub fn display_hands(
     let all_hands_bones = hands_res
         .hands
         .iter()
-        .enumerate()
-        .flat_map(|x2| x2.1.digits)
+        .flat_map(|hand| hand.digits)
         .map(|x| [x.metacarpal, x.proximal, x.intermediate, x.distal])
         .flat_map(|x1| x1);
 

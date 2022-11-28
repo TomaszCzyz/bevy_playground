@@ -2,8 +2,8 @@ use bevy::app::{App, Plugin};
 use bevy::prelude::*;
 use bevy::prelude::shape::Capsule;
 use leaprs::{Connection, ConnectionConfig, Event};
-use crate::display::display_hands;
 
+use crate::display::display_hands;
 use crate::leap_controller_plugin::hand::MyHand;
 
 mod bone;
