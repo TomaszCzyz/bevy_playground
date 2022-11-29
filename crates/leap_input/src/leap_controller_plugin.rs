@@ -23,6 +23,7 @@ impl Plugin for LeapControllerPlugin {
     }
 }
 
+// todo: make components from Digits
 #[derive(Resource)]
 pub struct HandsData {
     pub hands: Vec<MyHand>,

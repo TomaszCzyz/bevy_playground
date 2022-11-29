@@ -1,8 +1,7 @@
-use bevy::ecs::system::EntityCommands;
 use bevy::prelude::shape::Icosphere;
-use bevy::prelude::CursorIcon::Grab;
 use bevy::prelude::*;
 use bevy::render::mesh::shape::Box;
+use mac::unwrap_or_return;
 
 use leap_input::leap_controller_plugin::{HandsData, HandsOrigin, LeapControllerPlugin};
 
@@ -72,6 +71,8 @@ impl GrabData {
 fn update_grabbed_obj_transparency(
     grab_res: Res<GrabData>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    // todo: if we could query parent entity directly (or store child entity) then we could use
+    // shorter and more performant 'query.get_mut(entity)'
     mut material_query: Query<(&Parent, &Handle<StandardMaterial>), With<ObjectBounds>>,
 ) {
     if !grab_res.is_changed() {
@@ -110,29 +111,15 @@ fn update_grabbed_obj_transparency(
 fn update_grabbed_obj_transform(
     grab_res: Res<GrabData>,
     hands_res: Res<HandsData>,
-    mut transform_query: Query<(&mut Transform)>,
+    mut transform_query: Query<&mut Transform>,
 ) {
-    let hand = match hands_res.hands.get(0) {
-        None => return,
-        Some(o) => o,
-    };
-
-    let grabbed_entity = match grab_res.entity {
-        None => return,
-        Some(o) => o,
-    };
+    let hand = unwrap_or_return!(hands_res.hands.get(0), ());
+    let grabbed_entity = unwrap_or_return!(grab_res.entity, ());
 
     let mut transform = transform_query.get_mut(grabbed_entity).unwrap();
     let hand_move_delta = hand.palm.position - grab_res.start_hands_transform.translation;
 
     transform.translation = grab_res.start_obj_transform.translation + hand_move_delta;
-
-    // for (transform, grabbed_data) in transform_query.iter_mut() {
-    //     let (mut transform, grabbed_data): (Mut<Transform>, &GrabData) = (transform, grabbed_data);
-    //
-    //     let hand_move_delta = hand.palm.position - grabbed_data.start_hands_transform.translation;
-    //     transform.translation = grabbed_data.start_obj_transform.translation + hand_move_delta;
-    // }
 }
 
 fn detect_obj_grabbing(
@@ -140,10 +127,7 @@ fn detect_obj_grabbing(
     hands_res: Res<HandsData>,
     main_gizmo_query: Query<(Entity, &Transform), With<MainGizmo>>,
 ) {
-    let hand = match hands_res.hands.get(0) {
-        Some(o) => o,
-        None => return,
-    };
+    let hand = unwrap_or_return!(hands_res.hands.get(0), ());
 
     let (entity, transform): (Entity, &Transform) = main_gizmo_query.single();
 
@@ -171,7 +155,7 @@ fn detect_obj_grabbing(
         }
         Some(_) => {
             if finger_tips_inside_bounds < 3 {
-                // end of a grabbing; clean up
+                // end of a grabbing; clear resource
                 grab_res.clear();
             }
         }
@@ -251,10 +235,10 @@ fn spawn_camera(mut commands: Commands) {
 /// to adjust distance as percent of length from e.g. center of the scene
 fn adjust_hands_origin_to_camera_transform(
     mut hand_origin_query: Query<&mut Transform, With<HandsOrigin>>,
-    camera_query: Query<&Transform, (With<PlayerCamera>, Without<HandsOrigin>)>,
+    // camera_query: Query<&Transform, (With<PlayerCamera>, Without<HandsOrigin>)>,
 ) {
     let mut hands_origin_transform = hand_origin_query.single_mut();
-    let camera_transform = camera_query.single();
+    // let camera_transform = camera_query.single();
 
     // *hands_origin_transform = Transform {
     //     translation: camera_transform.translation + camera_transform.forward() * HANDS_DISTANCE,// - Vec3::Y * 300.,
