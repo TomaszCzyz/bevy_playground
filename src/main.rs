@@ -1,6 +1,7 @@
 use bevy::prelude::shape::Icosphere;
 use bevy::prelude::*;
 use bevy::render::mesh::shape::Box;
+use bevy_editor_pls::prelude::*;
 use mac::unwrap_or_return;
 
 use leap_input::leap_controller_plugin::{HandsData, HandsOrigin, LeapControllerPlugin};
@@ -18,7 +19,6 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.2, 0.2, 0.2)))
         .insert_resource(GrabData::default())
-        .add_plugin(LeapControllerPlugin)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             window: WindowDescriptor {
                 width: WIDTH,
@@ -27,9 +27,11 @@ fn main() {
             },
             ..default()
         }))
+        .add_plugin(EditorPlugin)
+        .add_plugin(LeapControllerPlugin)
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_basic_scene)
-        .add_system_to_stage(CoreStage::PreUpdate, detect_obj_grabbing)
+        .add_system(detect_obj_grabbing)
         .add_system(adjust_hands_origin_to_camera_transform)
         .add_system(update_grabbed_obj_transform)
         .add_system(update_grabbed_obj_transparency)
