@@ -1,5 +1,6 @@
-use bevy::prelude::shape::Icosphere;
+use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
+use bevy::prelude::shape::Icosphere;
 use bevy::render::mesh::shape::Box;
 use bevy_editor_pls::prelude::*;
 use mac::unwrap_or_return;
@@ -9,8 +10,8 @@ use leap_input::leap_controller_plugin::{HandsData, HandsOrigin, LeapControllerP
 mod helpers;
 mod shape;
 
-pub const HEIGHT: f32 = 720.0;
-pub const WIDTH: f32 = 1280.0;
+pub const HEIGHT: f32 = 1080.;
+pub const WIDTH: f32 = 1920.;
 pub const TABLE_SIZE: [f32; 3] = [1600., 700., 1600.];
 pub const HANDS_DISTANCE: f32 = 800.;
 pub const CAMERA_ORIGIN: Transform = Transform::from_xyz(0., 350., 500.);
@@ -27,6 +28,8 @@ fn main() {
             },
             ..default()
         }))
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(EntityCountDiagnosticsPlugin::default())
         .add_plugin(EditorPlugin)
         .add_plugin(LeapControllerPlugin)
         .add_startup_system(spawn_camera)
