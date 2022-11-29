@@ -1,4 +1,6 @@
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::shape::Icosphere;
+use bevy::prelude::CursorIcon::Grab;
 use bevy::prelude::*;
 use bevy::render::mesh::shape::Box;
 
@@ -16,11 +18,7 @@ pub const CAMERA_ORIGIN: Transform = Transform::from_xyz(0., 350., 500.);
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.2, 0.2, 0.2)))
-        .insert_resource(GrabData {
-            entity_id: None,
-            start_hands_transform: Default::default(),
-            start_obj_transform: Default::default(),
-        })
+        .insert_resource(GrabData::default())
         .add_plugin(LeapControllerPlugin)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             window: WindowDescriptor {
@@ -36,7 +34,6 @@ fn main() {
         .add_system(adjust_hands_origin_to_camera_transform)
         .add_system(update_grabbed_obj_transform)
         .add_system(update_grabbed_obj_transparency)
-        .add_system(revert_grabbed_obj_transparency)
         .run();
 }
 
@@ -50,69 +47,105 @@ pub struct ObjectBounds;
 #[derive(Component)]
 pub struct MainGizmo;
 
-#[derive(Resource)]
+#[derive(Clone, Default, Resource)]
 pub struct GrabData {
-    entity_id: Option<Entity>,
+    entity: Option<Entity>,
+    previous_entity: Option<Entity>,
     start_hands_transform: Transform,
     start_obj_transform: Transform,
 }
 
-fn revert_grabbed_obj_transparency(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    removals: RemovedComponents<GrabData>,
-    mut material_query: Query<(Entity, &Handle<StandardMaterial>)>,
-) {
-    for entity in removals.iter() {
-        for (material_entity, material_handle) in material_query.iter_mut() {
-            if material_entity != entity {
-                continue;
-            }
+impl GrabData {
+    fn clear(&mut self) {
+        self.previous_entity = self.entity;
+        self.entity = None;
+    }
 
-            let some_color = &mut materials.get_mut(material_handle).unwrap().base_color;
-            // update color after grabbing ends
-            // some_color.set_a(0.4);
-        }
+    fn update(&mut self, entity: Entity, start_hands_transform: Transform, start_obj_transform: Transform) {
+        self.previous_entity = self.entity;
+        self.entity = Some(entity);
+        self.start_hands_transform = start_hands_transform;
+        self.start_obj_transform = start_obj_transform;
     }
 }
 
 fn update_grabbed_obj_transparency(
+    grab_res: Res<GrabData>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut material_query: Query<&Handle<StandardMaterial>, Added<GrabData>>,
+    mut material_query: Query<(&Parent, &Handle<StandardMaterial>), With<ObjectBounds>>,
 ) {
-    for material_handle in material_query.iter_mut() {
-        let some_color = &mut materials.get_mut(material_handle).unwrap().base_color;
-        // update color after grabbing ends
-        some_color.set_a(0.8);
+    if !grab_res.is_changed() {
+        return;
+    }
+
+    if let Some(grab_entity) = grab_res.entity {
+        for (parent_entity, material_handle) in material_query.iter_mut() {
+            if parent_entity.get() != grab_entity {
+                continue;
+            }
+
+            let some_color = &mut materials.get_mut(material_handle).unwrap().base_color;
+            some_color.set_a(0.8);
+        }
+    } else {
+        match grab_res.previous_entity {
+            None => {
+                return;
+            }
+            Some(previous_entity) => {
+                for (parent_entity, material_handle) in material_query.iter_mut() {
+                    if parent_entity.get() != previous_entity {
+                        continue;
+                    }
+
+                    let some_color = &mut materials.get_mut(material_handle).unwrap().base_color;
+                    info!("updating transparency");
+                    some_color.set_a(0.4);
+                }
+            }
+        }
     }
 }
 
-fn update_grabbed_obj_transform(hands_res: Res<HandsData>, mut grabbed_query: Query<(&mut Transform, &GrabData)>) {
+fn update_grabbed_obj_transform(
+    grab_res: Res<GrabData>,
+    hands_res: Res<HandsData>,
+    mut transform_query: Query<(&mut Transform)>,
+) {
     let hand = match hands_res.hands.get(0) {
-        Some(o) => o,
         None => return,
+        Some(o) => o,
     };
 
-    for (transform, grabbed_data) in grabbed_query.iter_mut() {
-        let (mut transform, grabbed_data): (Mut<Transform>, &GrabData) = (transform, grabbed_data);
+    let grabbed_entity = match grab_res.entity {
+        None => return,
+        Some(o) => o,
+    };
 
-        let hand_move_delta = hand.palm.position - grabbed_data.start_hands_transform.translation;
-        transform.translation = grabbed_data.start_obj_transform.translation + hand_move_delta;
-    }
+    let mut transform = transform_query.get_mut(grabbed_entity).unwrap();
+    let hand_move_delta = hand.palm.position - grab_res.start_hands_transform.translation;
+
+    transform.translation = grab_res.start_obj_transform.translation + hand_move_delta;
+
+    // for (transform, grabbed_data) in transform_query.iter_mut() {
+    //     let (mut transform, grabbed_data): (Mut<Transform>, &GrabData) = (transform, grabbed_data);
+    //
+    //     let hand_move_delta = hand.palm.position - grabbed_data.start_hands_transform.translation;
+    //     transform.translation = grabbed_data.start_obj_transform.translation + hand_move_delta;
+    // }
 }
 
 fn detect_obj_grabbing(
-    mut commands: Commands,
+    mut grab_res: ResMut<GrabData>,
     hands_res: Res<HandsData>,
-    grab_res: ResMut<GrabData>,
-    // bounds_query: Query<(Entity, &Handle<Mesh>), With<ObjectBounds>>,
-    main_gizmo_query: Query<(Entity, &Transform, Option<&GrabData>), With<MainGizmo>>,
+    main_gizmo_query: Query<(Entity, &Transform), With<MainGizmo>>,
 ) {
     let hand = match hands_res.hands.get(0) {
         Some(o) => o,
         None => return,
     };
 
-    let (entity, transform, grab_data): (Entity, &Transform, Option<&GrabData>) = main_gizmo_query.single();
+    let (entity, transform): (Entity, &Transform) = main_gizmo_query.single();
 
     let right_finger_tips = hand
         .digits
@@ -122,28 +155,26 @@ fn detect_obj_grabbing(
 
     let finger_tips_inside_bounds = right_finger_tips
         .iter()
-        .filter(|vec3| vec3.distance(transform.translation) < 35.)
+        .filter(|vec3| vec3.distance(transform.translation) < 40.)
         .count();
 
-    let mut entity_commands = commands.get_entity(entity).unwrap();
-
-    if finger_tips_inside_bounds >= 3 {
-        match grab_data {
-            None => {
-                entity_commands.insert(GrabData {
-                    start_hands_transform: Transform::from_translation(hand.palm.position),
-                    start_obj_transform: Transform::from_translation(transform.translation),
-                });
+    match grab_res.clone().entity {
+        None => {
+            if finger_tips_inside_bounds >= 3 {
+                // start new grabbing
+                grab_res.update(
+                    entity,
+                    Transform::from_translation(hand.palm.position),
+                    Transform::from_translation(transform.translation),
+                )
             }
-            _ => {}
-        };
-    } else {
-        match grab_data {
-            Some(_) => {
-                entity_commands.remove::<GrabData>();
+        }
+        Some(_) => {
+            if finger_tips_inside_bounds < 3 {
+                // end of a grabbing; clean up
+                grab_res.clear();
             }
-            _ => {}
-        };
+        }
     }
 }
 
@@ -192,7 +223,7 @@ fn spawn_basic_scene(
                         radius: 35.,
                         subdivisions: 12,
                     })),
-                    material: materials.add(Color::rgba_u8(172, 229, 88, 50).into()),
+                    material: materials.add(Color::rgba_u8(172, 229, 88, 102).into()),
                     ..default()
                 },
                 ObjectBounds,
