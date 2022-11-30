@@ -1,9 +1,10 @@
+use bevy::prelude::Component;
 use leaprs::{Hand, HandType};
 use crate::leap_controller_plugin::bone::MyBone;
 use crate::leap_controller_plugin::digit::MyDigit;
 use crate::leap_controller_plugin::palm::MyPalm;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Component, Copy, PartialEq, Eq)]
 pub enum MyHandType {
     Left,
     Right,

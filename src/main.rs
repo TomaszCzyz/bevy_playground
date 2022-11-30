@@ -41,14 +41,13 @@ fn main() {
         .add_system(adjust_hands_origin_to_camera_transform)
         .add_system(update_grabbed_obj_transform)
         .add_system(update_grabbed_obj_transparency)
-        .add_system(print_grab_strength)
+        // .add_system(print_grab_strength)
         .run();
 }
 
 /// Main camera. Hands' Transform is calculated in relation to it
 #[derive(Component)]
 pub struct PlayerCamera;
-
 
 #[derive(Component)]
 pub struct MainGizmo;
