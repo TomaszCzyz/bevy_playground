@@ -1,7 +1,9 @@
-use crate::leap_controller_plugin::{HandPart, HandsData};
-use bevy::prelude::*;
 use std::f32::consts::PI;
+
 use bevy::ecs::query::QueryIter;
+use bevy::prelude::*;
+
+use crate::leap_controller_plugin::{HandPart, HandsData};
 
 pub fn display_hands(
     hands_res: Res<HandsData>,

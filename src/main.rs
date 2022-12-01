@@ -5,12 +5,11 @@ use bevy::render::mesh::shape::Box;
 use bevy_editor_pls::prelude::*;
 use mac::unwrap_or_return;
 
-use leap_input::leap_controller_plugin::{HandsData, HandsOrigin, LeapControllerPlugin};
+use leap_input::leap_controller_plugin::{BoneComponent, HandBone, HandsData, HandsOrigin, LeapControllerPlugin};
 
 use crate::grab_gesture::{detect_obj_grabbing, GrabData, ObjectBounds, update_grabbed_obj_transform, update_grabbed_obj_transparency};
 
 mod helpers;
-mod shape;
 mod grab_gesture;
 
 pub const HEIGHT: f32 = 1080.;
@@ -37,11 +36,12 @@ fn main() {
         .add_plugin(LeapControllerPlugin)
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_basic_scene)
-        .add_system(detect_obj_grabbing)
+        // .add_system(detect_obj_grabbing)
         .add_system(adjust_hands_origin_to_camera_transform)
-        .add_system(update_grabbed_obj_transform)
-        .add_system(update_grabbed_obj_transparency)
+        // .add_system(update_grabbed_obj_transform)
+        // .add_system(update_grabbed_obj_transparency)
         // .add_system(print_grab_strength)
+        .add_system(print_bones_data)
         .run();
 }
 
@@ -51,6 +51,14 @@ pub struct PlayerCamera;
 
 #[derive(Component)]
 pub struct MainGizmo;
+
+fn print_bones_data(
+    digits_query: Query<(&Transform, &Visibility, &BoneComponent), With<HandBone>>,
+) {
+    for (t, v, b) in digits_query.iter() {
+        info!("transform: {} \t\t component: {:?}", t.translation, b.bone_type);
+    }
+}
 
 fn print_grab_strength(hands_res: Res<HandsData>) {
     let hand = unwrap_or_return!(hands_res.hands.get(0), ());
