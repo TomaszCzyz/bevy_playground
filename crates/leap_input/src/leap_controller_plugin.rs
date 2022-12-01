@@ -1,10 +1,11 @@
 use std::f32::consts::PI;
 
 use bevy::app::{App, Plugin};
-use bevy::prelude::*;
 use bevy::prelude::shape::Capsule;
+use bevy::prelude::*;
 use leaprs::{Connection, ConnectionConfig, Event};
 
+use crate::constant::LEAP_DIGITS_TYPES_ORDER;
 use crate::leap_controller_plugin::hand::MyHand;
 
 mod bone;
@@ -17,11 +18,8 @@ pub struct LeapControllerPlugin;
 impl Plugin for LeapControllerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(create_connection)
-            .add_startup_system(spawn_hands_entities.before(add_meshes_and_materials_for_hands))
-            .add_startup_system(add_meshes_and_materials_for_hands.after(spawn_hands_entities))
+            .add_startup_system(spawn_hands_entities)
             .add_system(update_hand_data);
-        // .add_system(display_hands.after(update_hand_data))
-        // .insert_resource(HandsData { hands: default() });
     }
 }
 
@@ -75,28 +73,10 @@ fn create_connection(world: &mut World) {
     world.insert_non_send_resource(connection);
 }
 
-fn spawn_hands_entities(mut commands: Commands, time: Res<Time>) {
-    let x = 1;
-    let y = &x;
-
-    // commands
-    //     .spawn((SpatialBundle::default(), HandsOrigin))
-    //     .with_children(|mut parent| {
-    //         for _ in 1..40 {
-    //             parent.spawn(BoneComponent {
-    //                 digit_type: DigitType::Unknown,
-    //                 bone_type: BoneType::Unknown,
-    //                 _m: HandBone,
-    //             });
-    //         }
-    //     });
-}
-
-fn add_meshes_and_materials_for_hands(
+fn spawn_hands_entities(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut bones_query: Query<Entity, With<BoneComponent>>,
 ) {
     let capsule = Capsule {
         radius: 5.,
@@ -112,15 +92,6 @@ fn add_meshes_and_materials_for_hands(
         reflectance: 0.2,
         ..default()
     });
-
-    // for entity in bones_query.iter_mut() {
-    //     commands.get_entity(entity).unwrap().insert(PbrBundle {
-    //         mesh: meshes.add(capsule.clone().into()),
-    //         visibility: Visibility::INVISIBLE,
-    //         material: debug_material.clone(),
-    //         ..default()
-    //     });
-    // }
 
     commands
         .spawn((SpatialBundle::default(), HandsOrigin))
@@ -141,14 +112,6 @@ fn add_meshes_and_materials_for_hands(
             }
         });
 }
-
-const LEAP_DIGITS_TYPES_ORDER: [DigitType; 5] = [
-    DigitType::Thumb,
-    DigitType::Index,
-    DigitType::Middle,
-    DigitType::Ring,
-    DigitType::Pinky,
-];
 
 fn update_hand_data(
     mut leap_conn: NonSendMut<Connection>,
@@ -191,32 +154,9 @@ fn update_hand_data(
                     visibility.is_visible = false;
                 }
             }
-            _ => {
-                let x = 1;
-            }
+            _ => {}
         }
     }
 }
 
 fn handle_distal_bone() {}
-
-// fn update_hand_data(mut hands_res: ResMut<HandsData>, mut leap_conn: NonSendMut<Connection>) {
-//     if let Ok(message) = leap_conn.poll(25) {
-//         match &message.event() {
-//             Event::Connection(_) => println!("connection event"),
-//             Event::Device(_) => println!("device event"),
-//             Event::Tracking(e) => {
-//                 hands_res.hands.clear();
-//
-//                 if e.hands().len() == 0 {
-//                     return;
-//                 }
-//
-//                 for hand in e.hands() {
-//                     hands_res.hands.push(MyHand::from(hand))
-//                 }
-//             }
-//             _ => {}
-//         }
-//     }
-// }
