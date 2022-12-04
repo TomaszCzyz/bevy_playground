@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use mac::unwrap_or_return;
 
-use leap_input::leap_controller_plugin::HandsData;
+use leap_input::leap_controller_plugin::{BoneComponent, BoneType, DigitType};
 
 use crate::MainGizmo;
 
@@ -14,12 +14,14 @@ pub struct GrabData {
     previous_entity: Option<Entity>,
     start_hands_transform: Transform,
     start_obj_transform: Transform,
+    digits_involved: Vec<DigitType>,
 }
 
 impl GrabData {
     fn clear(&mut self) {
         self.previous_entity = self.entity;
         self.entity = None;
+        self.digits_involved.clear();
     }
 
     fn update(&mut self, entity: Entity, start_hands_transform: Transform, start_obj_transform: Transform) {
@@ -32,42 +34,38 @@ impl GrabData {
 
 pub fn detect_obj_grabbing(
     mut grab_res: ResMut<GrabData>,
-    hands_res: Res<HandsData>,
     main_gizmo_query: Query<(Entity, &Transform), With<MainGizmo>>,
+    digits_query: Query<(&Transform, &BoneComponent)>,
 ) {
-    let hand = unwrap_or_return!(hands_res.hands.get(0), ());
+    let (entity, main_gizmo_transform) = main_gizmo_query.single();
 
-    let (entity, transform) = main_gizmo_query.single();
-
-    let right_finger_tips = hand
-        .digits
+    let digits_inside_bounds = digits_query
         .iter()
-        .map(|digit| digit.distal.next_joint)
-        .collect::<Vec<Vec3>>();
-
-    let finger_tips_inside_bounds = right_finger_tips
-        .iter()
-        .filter(|vec3| vec3.distance(transform.translation) < 40.)
+        .filter(|(_, bone)| bone.bone_type == BoneType::Distal)
+        .filter(|(t, _)| t.translation.distance(main_gizmo_transform.translation) < 35.)
         .collect::<Vec<_>>();
 
-    match grab_res.clone().entity {
+    match grab_res.entity {
         None => {
-            if finger_tips_inside_bounds.len() >= 3 {
+            if digits_inside_bounds.len() >= 3 {
                 // start new grabbing
+                let mut fingers_center = Vec3::ZERO;
+                for (t, b) in digits_inside_bounds.iter() {
+                    fingers_center += t.translation;
+                    grab_res.digits_involved.push(b.digit_type);
+                }
 
-                let mut fingers_center: Vec3 = finger_tips_inside_bounds.iter().copied().sum();
-
-                fingers_center /= finger_tips_inside_bounds.len() as f32;
+                fingers_center /= digits_inside_bounds.len() as f32;
 
                 grab_res.update(
                     entity,
-                    Transform::from_translation(hand.palm.position),
-                    Transform::from_translation(transform.translation),
+                    Transform::from_translation(fingers_center),
+                    Transform::from_translation(main_gizmo_transform.translation),
                 )
             }
         }
         Some(_) => {
-            if finger_tips_inside_bounds.len() < 3 {
+            if digits_inside_bounds.len() < 3 {
                 // end of a grabbing; clear resource
                 grab_res.clear();
             }
@@ -77,21 +75,23 @@ pub fn detect_obj_grabbing(
 
 pub fn update_grabbed_obj_transform(
     grab_res: Res<GrabData>,
-    hands_res: Res<HandsData>,
-    mut transform_query: Query<&mut Transform>,
+    digits_query: Query<(&Transform, &BoneComponent)>,
+    mut transform_query: Query<&mut Transform, (With<MainGizmo>, Without<BoneComponent>)>,
 ) {
-    let hand = unwrap_or_return!(hands_res.hands.get(0), ());
     let grabbed_entity = unwrap_or_return!(grab_res.entity, ());
+    let mut grabbed_entity_transform = transform_query.get_mut(grabbed_entity).unwrap();
 
-    // let mut fingers_center: Vec3 = finger_tips_inside_bounds
-    //     .iter()
-    //     .copied()
-    //     .sum();
+    let mut involved_digits_center = Vec3::ZERO;
+    for (t, b) in digits_query.iter() {
+        if b.bone_type == BoneType::Distal && grab_res.digits_involved.contains(&b.digit_type) {
+            involved_digits_center += t.translation;
+        }
+    }
 
-    let mut transform = transform_query.get_mut(grabbed_entity).unwrap();
-    let hand_move_delta = hand.palm.position - grab_res.start_hands_transform.translation;
+    involved_digits_center /= grab_res.digits_involved.len() as f32;
 
-    transform.translation = grab_res.start_obj_transform.translation + hand_move_delta;
+    grabbed_entity_transform.translation = grab_res.start_obj_transform.translation
+        + (involved_digits_center - grab_res.start_hands_transform.translation);
 }
 
 pub fn update_grabbed_obj_transparency(

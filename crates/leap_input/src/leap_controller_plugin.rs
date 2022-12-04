@@ -23,19 +23,18 @@ impl Plugin for LeapControllerPlugin {
     }
 }
 
-/// Struct to mark SpatialBundle, which is a parent of all [`HandPart`]s.
+/// Struct to mark SpatialBundle, which is a parent of all [`BoneComponent`]s.
 /// You can use it for to change relative Transform of all digits at once.
 #[derive(Component)]
 pub struct HandsOrigin;
 
-/// Struct to mark all hands' digits
 #[derive(Component)]
-pub struct HandPart;
+pub struct BoneComponent {
+    pub digit_type: DigitType,
+    pub bone_type: BoneType,
+}
 
-#[derive(Component)]
-pub struct HandBone;
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DigitType {
     Unknown,
     Thumb,
@@ -45,20 +44,13 @@ pub enum DigitType {
     Pinky,
 }
 
-#[derive(Component, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BoneType {
     Unknown,
     Metacarpal,
     Proximal,
     Intermediate,
     Distal,
-}
-
-#[derive(Component)]
-pub struct BoneComponent {
-    pub digit_type: DigitType,
-    pub bone_type: BoneType,
-    pub _m: HandBone,
 }
 
 #[derive(Resource)]
@@ -101,7 +93,6 @@ fn spawn_hands_entities(
                     .spawn(BoneComponent {
                         digit_type: DigitType::Unknown,
                         bone_type: BoneType::Unknown,
-                        _m: HandBone,
                     })
                     .insert(PbrBundle {
                         mesh: meshes.add(capsule.clone().into()),
