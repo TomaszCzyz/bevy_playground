@@ -45,14 +45,14 @@ pub fn detect_obj_grabbing(
         .filter(|(t, _)| t.translation.distance(main_gizmo_transform.translation) < 35.)
         .collect::<Vec<_>>();
 
-    update_grab_resource(&mut grab_res, entity, main_gizmo_transform, digits_inside_bounds)
+    update_grab_resource(&mut grab_res, entity, main_gizmo_transform, &digits_inside_bounds);
 }
 
 fn update_grab_resource(
     grab_res: &mut ResMut<GrabData>,
     entity: Entity,
     main_gizmo_transform: &Transform,
-    digits_inside_bounds: Vec<(&Transform, &BoneComponent)>,
+    digits_inside_bounds: &Vec<(&Transform, &BoneComponent)>,
 ) {
     match grab_res.current_entity {
         None => {
@@ -62,7 +62,7 @@ fn update_grab_resource(
 
             // start new grabbing
             let mut fingers_center = Vec3::ZERO;
-            for (t, b) in digits_inside_bounds.iter() {
+            for (t, b) in digits_inside_bounds {
                 fingers_center += t.translation;
                 grab_res.digits_involved.push(b.digit_type);
             }
@@ -73,7 +73,7 @@ fn update_grab_resource(
                 entity,
                 Transform::from_translation(fingers_center),
                 Transform::from_translation(main_gizmo_transform.translation),
-            )
+            );
         }
         Some(_) => {
             if digits_inside_bounds.len() >= 3 {
@@ -130,9 +130,7 @@ pub fn update_grabbed_obj_transparency(
         }
     } else {
         match grab_res.previous_entity {
-            None => {
-                return;
-            }
+            None => {}
             Some(previous_entity) => {
                 for (parent_entity, material_handle) in material_query.iter_mut() {
                     if parent_entity.get() != previous_entity {

@@ -95,7 +95,7 @@ fn spawn_hands_entities(
                         bone_type: BoneType::Unknown,
                     })
                     .insert(PbrBundle {
-                        mesh: meshes.add(capsule.clone().into()),
+                        mesh: meshes.add(capsule.into()),
                         visibility: Visibility::INVISIBLE,
                         material: debug_material.clone(),
                         ..default()
@@ -149,5 +149,3 @@ fn update_hand_data(
         }
     }
 }
-
-fn handle_distal_bone() {}

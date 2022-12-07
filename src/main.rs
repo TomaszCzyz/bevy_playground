@@ -3,9 +3,8 @@ use bevy::prelude::*;
 use bevy::prelude::shape::Icosphere;
 use bevy::render::mesh::shape::Box;
 use bevy_editor_pls::prelude::*;
-use mac::unwrap_or_return;
 
-use leap_input::leap_controller_plugin::{BoneComponent, HandsData, HandsOrigin, LeapControllerPlugin};
+use leap_input::leap_controller_plugin::{HandsOrigin, LeapControllerPlugin};
 
 use crate::grab_gesture::{detect_obj_grabbing, GrabData, ObjectBounds, update_grabbed_obj_transform, update_grabbed_obj_transparency};
 
@@ -40,7 +39,6 @@ fn main() {
         .add_system(detect_obj_grabbing)
         .add_system(update_grabbed_obj_transform)
         .add_system(update_grabbed_obj_transparency)
-        // .add_system(print_grab_strength)
         .run();
 }
 
@@ -50,15 +48,6 @@ pub struct PlayerCamera;
 
 #[derive(Component)]
 pub struct MainGizmo;
-
-fn print_grab_strength(hands_res: Res<HandsData>) {
-    let hand = unwrap_or_return!(hands_res.hands.get(0), ());
-
-    info!(
-        "grab strength: {} \t\t pinch strength: {}",
-        hand.grab_strength, hand.pinch_strength
-    )
-}
 
 fn spawn_basic_scene(
     mut commands: Commands,
