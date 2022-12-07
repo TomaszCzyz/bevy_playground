@@ -17,4 +17,5 @@ opt-level = 3
 [dependencies]
 leap_input = { path = "crates/leap_input", version = "0.1.0" }
 bevy = "0.9"
+bevy_editor_pls = "0.2.0"
 mac = "*"
